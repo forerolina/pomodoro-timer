@@ -84,6 +84,14 @@
   --border-width-strong: 2px;
   --icon-size-md: 22px;
   --icon-size-sm: 18px;
+  --font-size-emoji: var(--font-size-lg);
+  --confetti-size: var(--space-sm);
+  --confetti-duration: 1.5s;
+  --confetti-layer-z-index: 4;
+  --confetti-rotation: 300deg;
+  --confetti-rise-distance: calc(-1 * var(--spacer-height-desktop) * 3);
+  --tomato-bounce-duration: var(--transition-duration-standard);
+  --tomato-bounce-height: calc(-1 * var(--space-md));
   --spacer-height-desktop: 88px;
   --spacer-height-mobile: 48px;
   --tick-indicator-offset: -4.5px;
@@ -238,6 +246,8 @@ code {
   justify-content: center;
   align-items: center;
   --flash-color: var(--flash-work-color);
+  position: relative;
+  overflow: hidden;
 }
 
 #app[data-mode='work'] {
@@ -308,7 +318,99 @@ code {
   font-variant-numeric: tabular-nums;
   letter-spacing: var(--letter-spacing-timer);
   color: var(--color-text);
+  margin: 0 0 var(--space-sm);
+}
+
+.pomodoro-timer .pomodoro-counter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   margin: 0 0 var(--space-xl);
+}
+
+.pomodoro-timer .pomodoro-counter__icons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: var(--font-size-emoji);
+}
+
+.pomodoro-timer .pomodoro-counter__icon {
+  font-size: var(--font-size-emoji);
+  line-height: var(--line-height-display);
+}
+
+.confetti-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--confetti-layer-z-index);
+}
+
+.confetti-piece {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--confetti-size);
+  height: var(--confetti-size);
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  animation: confettiRise var(--confetti-duration) ease-out forwards;
+  animation-delay: var(--confetti-delay);
+}
+
+.confetti-piece--left {
+  background: var(--color-work-strong);
+  --confetti-direction: 1;
+}
+
+.confetti-piece--right {
+  background: var(--color-break);
+  --confetti-direction: -1;
+}
+
+@keyframes confettiRise {
+  0% {
+    opacity: 0;
+    transform: translate3d(var(--confetti-origin-x), var(--confetti-origin-y), 0)
+      rotate(0deg);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(
+        calc(
+          var(--confetti-origin-x) +
+            (var(--confetti-direction) * var(--confetti-drift) * var(--space-lg))
+        ),
+        calc(var(--confetti-origin-y) + var(--confetti-rise-distance)),
+        0
+      )
+      rotate(var(--confetti-rotation));
+  }
+}
+
+.pomodoro-timer .pomodoro-counter__icon.is-bouncing {
+  animation: tomatoBounce var(--tomato-bounce-duration) ease-out;
+}
+
+@keyframes tomatoBounce {
+  0% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(var(--tomato-bounce-height));
+  }
+  55% {
+    transform: translateY(calc(var(--tomato-bounce-height) / 2));
+  }
+  100% {
+    transform: translateY(0);
+  }
 }
 
 #app[data-mode='work'] .time-display {

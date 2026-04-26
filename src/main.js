@@ -16,6 +16,8 @@ let timeRemaining = workDurationSeconds
 let isRunning = false
 /** @type {'work' | 'break'} */
 let currentMode = 'work'
+/** @type {number} */
+let completedPomodoros = 0
 
 /** @type {ReturnType<typeof setInterval> | null} */
 let intervalId = null
@@ -24,7 +26,10 @@ let intervalId = null
 let modeSwitchAudio = null
 
 const app = document.getElementById('app')
+const confettiLayer = document.getElementById('confetti-layer')
 const timeDisplay = document.getElementById('time-display')
+const pomodoroCounter = document.getElementById('pomodoro-counter')
+const pomodoroCounterIcons = document.getElementById('pomodoro-counter-icons')
 const modeLabel = document.getElementById('mode-label')
 const startPauseButton = document.getElementById('start-pause-button')
 const resetButton = document.getElementById('reset-button')
@@ -34,7 +39,10 @@ const applySettingsButton = document.getElementById('apply-settings-button')
 
 if (
   !app ||
+  !confettiLayer ||
   !timeDisplay ||
+  !pomodoroCounter ||
+  !pomodoroCounterIcons ||
   !modeLabel ||
   !startPauseButton ||
   !resetButton ||
@@ -51,8 +59,28 @@ function formatMmSs(totalSeconds) {
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 }
 
+function renderPomodoroCounter() {
+  const completedLabel =
+    completedPomodoros === 1
+      ? '1 pomodoro completed'
+      : `${completedPomodoros} pomodoros completed`
+  pomodoroCounter.setAttribute('aria-label', completedLabel)
+
+  pomodoroCounterIcons.replaceChildren()
+  const iconElements = Array.from({ length: completedPomodoros }, (_, index) => {
+    const icon = document.createElement('span')
+    icon.className = 'pomodoro-counter__icon'
+    icon.textContent = '🍅'
+    icon.setAttribute('aria-hidden', 'true')
+    icon.title = `Completed pomodoro ${index + 1}`
+    return icon
+  })
+  pomodoroCounterIcons.append(...iconElements)
+}
+
 function updateDom() {
   timeDisplay.textContent = formatMmSs(timeRemaining)
+  renderPomodoroCounter()
   modeLabel.textContent = currentMode === 'work' ? 'Work' : 'Break'
   app.dataset.mode = currentMode
   startPauseButton.textContent = isRunning ? 'Pause' : 'Start'
@@ -114,6 +142,47 @@ function playModeSwitchSound() {
   })
 }
 
+function triggerConfettiCelebration() {
+  const tomatoIcons = pomodoroCounterIcons.querySelectorAll('.pomodoro-counter__icon')
+  if (tomatoIcons.length === 0) return
+
+  confettiLayer.replaceChildren()
+  const appBounds = app.getBoundingClientRect()
+  const confettiPieces = []
+  const piecesPerTomato = 10
+
+  tomatoIcons.forEach((iconElement, tomatoIndex) => {
+    iconElement.classList.remove('is-bouncing')
+    void iconElement.offsetWidth
+    iconElement.classList.add('is-bouncing')
+
+    const iconBounds = iconElement.getBoundingClientRect()
+    const originX = iconBounds.left - appBounds.left + iconBounds.width / 2
+    const originY = iconBounds.top - appBounds.top + iconBounds.height / 2
+
+    for (let pieceIndex = 0; pieceIndex < piecesPerTomato; pieceIndex += 1) {
+      const confettiPiece = document.createElement('span')
+      const goesRight = pieceIndex % 2 === 0
+      confettiPiece.className = `confetti-piece ${goesRight ? 'confetti-piece--right' : 'confetti-piece--left'}`
+      confettiPiece.style.setProperty('--confetti-origin-x', `${originX}px`)
+      confettiPiece.style.setProperty('--confetti-origin-y', `${originY}px`)
+      confettiPiece.style.setProperty('--confetti-delay', `${(pieceIndex + tomatoIndex) * 35}ms`)
+      confettiPiece.style.setProperty('--confetti-drift', `${(pieceIndex % 4) + 1}`)
+      confettiPieces.push(confettiPiece)
+    }
+  })
+
+  confettiLayer.append(...confettiPieces)
+
+  const clearDelayMilliseconds = 2600
+  setTimeout(() => {
+    tomatoIcons.forEach(iconElement => {
+      iconElement.classList.remove('is-bouncing')
+    })
+    confettiLayer.replaceChildren()
+  }, clearDelayMilliseconds)
+}
+
 function tick() {
   if (!isRunning) return
 
@@ -122,6 +191,18 @@ function tick() {
   }
 
   if (timeRemaining === 0) {
+    if (currentMode === 'work') {
+      completedPomodoros += 1
+      if (completedPomodoros % 4 === 0) {
+        isRunning = false
+        clearTickInterval()
+        updateDom()
+        triggerModeSwitchFlash()
+        playModeSwitchSound()
+        triggerConfettiCelebration()
+        return
+      }
+    }
     switchToNextMode()
     updateDom()
     triggerModeSwitchFlash()
@@ -148,6 +229,7 @@ function reset() {
   isRunning = false
   clearTickInterval()
   currentMode = 'work'
+  completedPomodoros = 0
   timeRemaining = workDurationSeconds
   updateDom()
 }

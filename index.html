@@ -8,11 +8,15 @@
 </head>
 <body>
     <div id="app" data-mode="work">
+        <div class="confetti-layer" id="confetti-layer" aria-hidden="true"></div>
         <div id="center">
             <section class="pomodoro-timer" aria-label="Pomodoro timer">
                 <h1 class="pomodoro-timer__title">Pomodoro Timer</h1>
                 <p class="mode-indicator" id="mode-label">Work</p>
                 <div class="time-display" id="time-display" role="timer" aria-live="polite" aria-atomic="true">25:00</div>
+                <div class="pomodoro-counter" id="pomodoro-counter" aria-live="polite" aria-atomic="true" aria-label="No pomodoros completed yet">
+                    <div class="pomodoro-counter__icons" id="pomodoro-counter-icons" aria-hidden="true"></div>
+                </div>
                 <div class="timer-controls">
                     <button type="button" class="control-button" id="start-pause-button" aria-pressed="false">Start</button>
                     <button type="button" class="control-button" id="reset-button">Reset</button>
