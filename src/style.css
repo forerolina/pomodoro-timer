@@ -66,6 +66,9 @@
 
   --transition-duration-fast: 0.2s;
   --transition-duration-standard: 0.3s;
+  --flash-duration: var(--transition-duration-standard);
+  --flash-work-color: var(--color-work-soft);
+  --flash-break-color: var(--color-break-soft);
 
   --font-size-body: 1.125rem;
 
@@ -203,6 +206,28 @@ code {
   display: flex;
   justify-content: center;
   align-items: center;
+  --flash-color: var(--flash-work-color);
+}
+
+#app[data-mode='work'] {
+  --flash-color: var(--flash-work-color);
+}
+
+#app[data-mode='break'] {
+  --flash-color: var(--flash-break-color);
+}
+
+#app.is-mode-switch-flashing {
+  animation: modeSwitchFlash var(--flash-duration) ease-out;
+}
+
+@keyframes modeSwitchFlash {
+  0% {
+    background: var(--flash-color);
+  }
+  100% {
+    background: var(--color-bg);
+  }
 }
 
 #center {

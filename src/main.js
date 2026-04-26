@@ -1,5 +1,8 @@
 import './style.css'
 
+// Mode notification: "Connected 01" by rhodesmas — https://freesound.org/people/rhodesmas/sounds/322897/ (CC BY 4.0). Preview from Freesound CDN bundled at public/sounds/.
+const MODE_SWITCH_SOUND_URL = `${import.meta.env.BASE_URL}sounds/322897-connected-01-lq.mp3`
+
 const WORK_SECONDS = 25 * 60
 const BREAK_SECONDS = 5 * 60
 
@@ -16,6 +19,9 @@ let currentMode = 'work'
 
 /** @type {ReturnType<typeof setInterval> | null} */
 let intervalId = null
+
+/** @type {HTMLAudioElement | null} */
+let modeSwitchAudio = null
 
 const app = document.getElementById('app')
 const timeDisplay = document.getElementById('time-display')
@@ -91,6 +97,23 @@ function switchToNextMode() {
   }
 }
 
+function triggerModeSwitchFlash() {
+  app.classList.remove('is-mode-switch-flashing')
+  void app.offsetWidth
+  app.classList.add('is-mode-switch-flashing')
+}
+
+function playModeSwitchSound() {
+  if (!modeSwitchAudio) {
+    modeSwitchAudio = new Audio(MODE_SWITCH_SOUND_URL)
+    modeSwitchAudio.preload = 'auto'
+  }
+  modeSwitchAudio.currentTime = 0
+  void modeSwitchAudio.play().catch(() => {
+    // Ignored: autoplay policy or missing file
+  })
+}
+
 function tick() {
   if (!isRunning) return
 
@@ -100,6 +123,10 @@ function tick() {
 
   if (timeRemaining === 0) {
     switchToNextMode()
+    updateDom()
+    triggerModeSwitchFlash()
+    playModeSwitchSound()
+    return
   }
 
   updateDom()
